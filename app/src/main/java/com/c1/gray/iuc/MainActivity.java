@@ -1,5 +1,6 @@
 package com.c1.gray.iuc;
 
+import android.app.DownloadManager;
 import android.content.ActivityNotFoundException;
 import android.content.Intent;
 import android.os.Build;
@@ -11,6 +12,7 @@ import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -19,8 +21,24 @@ import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.android.volley.AuthFailureError;
+import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.JsonObjectRequest;
+import com.android.volley.toolbox.StringRequest;
+import com.android.volley.toolbox.Volley;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Locale;
+import java.util.Map;
 
 public class MainActivity extends AppCompatActivity implements TextToSpeech.OnInitListener {
     private final int SPEECH_REQUEST_CODE = 123;
@@ -101,7 +119,44 @@ public class MainActivity extends AppCompatActivity implements TextToSpeech.OnIn
 
                     ArrayList<String> result = data
                             .getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
-                    sayTextView.setText(result.get(0));
+
+                    RequestQueue queue = Volley.newRequestQueue(this);
+                    String url = null;
+                    try {
+                        url = "http://10.113.237.176:5160/test?message=hi";
+                        URLEncoder.encode(result.get(0), "UTF-8");
+                    } catch (UnsupportedEncodingException e) {
+                        e.printStackTrace();
+                    }
+                    JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.POST, url, null,
+                            new Response.Listener<JSONObject>() {
+
+                        @Override
+                        public void onResponse(JSONObject response) {
+                            try {
+                                Log.i("Response:", response.getString("result"));
+                            } catch (JSONException e) {
+                                e.printStackTrace();
+                            }
+                            sayTextView.setText("Response: " + response);
+                        }
+                    }, new Response.ErrorListener() {
+                        @Override
+                        public void onErrorResponse(VolleyError error) {
+
+                        }
+                    }) {
+                        @Override
+                        public Map getHeaders() {
+                            Map params = new HashMap<String, String>();
+                            params.put("content-type", "application/json; charset=utf-8");
+                            return params;
+
+                        }
+
+                    };
+                    queue.add(jsonObjectRequest);
+
                 }
                 break;
             }
