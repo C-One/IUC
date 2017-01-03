@@ -17,6 +17,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -44,6 +45,7 @@ public class MainActivity extends AppCompatActivity implements TextToSpeech.OnIn
     private final int SPEECH_REQUEST_CODE = 123;
     TextView sayTextView;
     TextToSpeech myTTS;
+    private EditText editText;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -55,6 +57,7 @@ public class MainActivity extends AppCompatActivity implements TextToSpeech.OnIn
         mic.setOnClickListener(mSpeechToTextOnClickListener);
 
         sayTextView = (TextView) findViewById(R.id.sayTextView);
+        editText = (EditText) findViewById(R.id.listenEditText);
 
         myTTS = new TextToSpeech(this, this);
         myTTS.setLanguage(Locale.KOREA);
@@ -119,6 +122,7 @@ public class MainActivity extends AppCompatActivity implements TextToSpeech.OnIn
 
                     ArrayList<String> result = data
                             .getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
+                    editText.setText(result.get(0));
 
                     RequestQueue queue = Volley.newRequestQueue(this);
                     String url = null;
@@ -128,22 +132,17 @@ public class MainActivity extends AppCompatActivity implements TextToSpeech.OnIn
                     } catch (UnsupportedEncodingException e) {
                         e.printStackTrace();
                     }
-                    JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.POST, url, null,
-                            new Response.Listener<JSONObject>() {
-
+                    StringRequest jsonObjectRequest = new StringRequest(Request.Method.POST, url,
+                            new Response.Listener<String>() {
                         @Override
-                        public void onResponse(JSONObject response) {
-                            try {
-                                Log.i("Response:", response.getString("result"));
-                            } catch (JSONException e) {
-                                e.printStackTrace();
-                            }
-                            sayTextView.setText("Response: " + response);
+                        public void onResponse(String response) {
+                                Log.i("Response:", response.toString());
+                            sayTextView.setText("Response: " + response.toString());
                         }
                     }, new Response.ErrorListener() {
                         @Override
                         public void onErrorResponse(VolleyError error) {
-
+                            Log.e("Error: ", error.toString());
                         }
                     }) {
                         @Override
